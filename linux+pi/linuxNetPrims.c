@@ -486,5 +486,5 @@ static PrimEntry entries[] = {
 };
 
 void addNetPrims() {
-	addPrimitiveSet("net", sizeof(entries) / sizeof(PrimEntry), entries);
+	addPrimitiveSet(NetPrims, "net", sizeof(entries) / sizeof(PrimEntry), entries);
 }

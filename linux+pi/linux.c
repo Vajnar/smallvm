@@ -60,6 +60,13 @@ uint32 millisecs() {
 	return (1000 * (now.tv_sec - startSecs)) + (now.tv_usec / 1000);
 }
 
+uint64 totalMicrosecs() {
+        // Returns a 64-bit integer containing microseconds since start.
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	return (1000000 * (now.tv_sec - startSecs)) + now.tv_usec;
+}
+
 #ifndef ARDUINO_RASPBERRY_PI
 void delay(int ms) {
 	clock_t start = millisecs();
@@ -122,6 +129,21 @@ int canReadByte() {
 int sendByte(char aByte) {
 	return write(pty, &aByte, 1);
 }
+
+int sendBytes(uint8 *buf, int start, int end) {
+	return write(pty, &buf[start], end - start);
+}
+
+int ideConnected() {
+	return serialConnected();
+}
+
+void resetRadio() { }
+
+
+void BLE_setEnabled(int enableFlag) { }
+
+void handleMicosecondClockWrap() { }
 
 // System Functions
 
@@ -221,7 +243,7 @@ void stopServos() {}
 char *codeFileName = "ublockscode";
 FILE *codeFile;
 
-void initCodeFile(uint8 *flash, int flashByteCount) {
+int initCodeFile(uint8 *flash, int flashByteCount) {
 	codeFile = fopen(codeFileName, "ab+");
 	fseek(codeFile, 0 , SEEK_END);
 	long fileSize = ftell(codeFile);
@@ -232,6 +254,7 @@ void initCodeFile(uint8 *flash, int flashByteCount) {
 	if (bytesRead != fileSize) {
 		outputString("initCodeFile did not read entire file");
 	}
+	return bytesRead;
 }
 
 void writeCodeFile(uint8 *code, int byteCount) {
