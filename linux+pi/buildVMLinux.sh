@@ -16,15 +16,11 @@
 
 gcc -m32 -std=c99 -Wall -Wno-unused-variable -Wno-unused-result -O3 \
 	-D GNUBLOCKS \
-	-I/usr/local/include/SDL2 \
+	-I/usr/include/SDL2 \
 	-I ../vm \
 	linux.c ../vm/*.c \
 	linuxFilePrims.c linuxIOPrims.c linuxNetPrims.c \
 	linuxOutputPrims.c linuxSensorPrims.c linuxTftPrims.c \
-	libs/libSDL2.a \
-	libs/libSDL2_ttf.a \
-	libs/libfreetype.a \
-	/usr/lib/i386-linux-gnu/libpng.a \
-	/usr/lib/i386-linux-gnu/libz.a \
+	-lSDL2 -lfreetype -lz -lpng -lSDL2_ttf \
 	-ldl -lm -lpthread \
 	-o vm_linux_i386

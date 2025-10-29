@@ -21,7 +21,7 @@ OBJ primVersion(int argCount, OBJ *args) {
 	int result = atoi(&VM_VERSION[1]); // skip initial "v"
 	return int2obj(result);
 }
-
+#if 0
 OBJ primBLE_ID(int argCount, OBJ *args) {
 	OBJ result;
 	if (strlen(BLE_ThreeLetterID) == 3) {
@@ -33,7 +33,7 @@ OBJ primBLE_ID(int argCount, OBJ *args) {
 	if (!result) return fail(insufficientMemoryError);
 	return result;
 }
-
+#endif
 OBJ primHexToInt(int argCount, OBJ *args) {
 	if (!IS_TYPE(args[0], StringType)) return fail(needsStringError);
 
@@ -538,7 +538,7 @@ static PrimEntry entries[] = {
 	{"sqrt", primIntSqrt},
 	{"sin", primIntSine},
 	{"version", primVersion},
-	{"bleID", primBLE_ID},
+//	{"bleID", primBLE_ID},
 	{"hexToInt", primHexToInt},
 	{"rescale", primRescale},
 	{"connectedToIDE", primConnectedToIDE},

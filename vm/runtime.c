@@ -24,7 +24,9 @@
 
 // Forward Reference Declarations
 
+#if !defined(GNUBLOCKS) || defined(EMSCRIPTEN)
 void delay(unsigned long); // Arduino delay function
+#endif
 
 static void softReset(int clearMemoryFlag);
 static void sendMessage(int msgType, int chunkIndex, int dataSize, char *data);
@@ -151,6 +153,24 @@ void primsInit() {
 	addOneWirePrims();
 // 	addCameraPrims();
 	addEncoderPrims();
+//	addSDCardPrims();
+#elif defined(GNUBLOCKS) && !defined(EMSCRIPTEN)
+	addDataPrims();
+	addDisplayPrims();
+	addFilePrims();
+	addIOPrims();
+	addMiscPrims();
+	addNetPrims();
+//	addBLEPrims();
+//	addRadioPrims();
+	addSensorPrims();
+	addSerialPrims();
+	addTFTPrims();
+	addVarPrims();
+	addHIDPrims();
+	addOneWirePrims();
+//	addCameraPrims();
+//	addEncoderPrims();
 //	addSDCardPrims();
 #else
 	addDataPrims();
