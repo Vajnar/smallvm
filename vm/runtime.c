@@ -202,7 +202,7 @@ void primsInit() {
 // 	addCameraPrims();
 	addEncoderPrims();	// ~1650 bytes
 //	addSDCardPrims();
-#elif defined(GNUBLOCKS) && !defined(EMSCRIPTEN)
+#elif defined(GNUBLOCKS) && !defined(EMSCRIPTEN) && !defined(NUTTX)
 	addDataPrims();
 	addDisplayPrims();
 	addFilePrims();
@@ -217,6 +217,24 @@ void primsInit() {
 	addVarPrims();
 	addHIDPrims();
 	addOneWirePrims();
+//	addCameraPrims();
+//	addEncoderPrims();
+//	addSDCardPrims();
+#elif defined(NUTTX)
+	addDataPrims();
+//	addDisplayPrims();
+//	addFilePrims();
+//	addIOPrims();
+	addMiscPrims();
+//	addNetPrims();
+//	addBLEPrims();
+//	addRadioPrims();
+//	addSensorPrims();
+//	addSerialPrims();
+//	addTFTPrims();
+	addVarPrims();
+//	addHIDPrims();
+//	addOneWirePrims();
 //	addCameraPrims();
 //	addEncoderPrims();
 //	addSDCardPrims();
