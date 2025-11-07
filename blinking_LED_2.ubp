@@ -1,0 +1,19 @@
+module main
+author unknown
+version 1 0 
+description ''
+
+script 75 65 {
+whenStarted
+forever {
+  setUserLED true
+  waitMillis 500
+  setUserLED false
+  waitMillis 500
+}
+}
+
+script 55 295 (boardType)
+
+script 55 336 ('[misc:version]')
+
