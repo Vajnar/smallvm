@@ -9,10 +9,10 @@ gcc -m32 -std=c99 -Wall -Wno-unused-variable -Wno-unused-result -O3 \
 	-D GNUBLOCKS \
 	-D NUTTX \
 	-I ../vm \
-	nuttx-socket.c ../vm/*.c \
+	nuttx-tcp.c ../vm/*.c \
 	-lm \
-	-o vm_linux_stripped_socket_i386
+	-o vm_linux_stripped_tcp_i386
 
 gcc -std=c99 -Wall -O3 \
-	pty2socket.c \
-	-o pty2socket
+	pty2tcp.c \
+	-o pty2tcp
