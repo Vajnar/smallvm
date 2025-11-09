@@ -69,7 +69,7 @@ void transferData(int from_fd, int to_fd) {
 	}
 }
 void dataLoop() {
-	printf("TCP socket: %d\r\nPTY fd: %d\r\n", udp_socket, pty);
+	printf("UDP socket: %d\r\nPTY fd: %d\r\n", udp_socket, pty);
 	while(1) {
 		transferData(pty, udp_socket);
 		transferData(udp_socket, pty);
@@ -77,7 +77,7 @@ void dataLoop() {
 	}
 }
 
-void setupTcpConnection(void) {
+void setupUdpConnection(void) {
 	udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
 
 	struct sockaddr_in saddr;
@@ -101,7 +101,7 @@ void setupTcpConnection(void) {
 int main(void) {
 	signal(SIGINT, exit);
 	atexit(exitGracefully);
-	setupTcpConnection();
+	setupUdpConnection();
 	openPseudoTerminal();
 	dataLoop();
 }
