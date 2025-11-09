@@ -174,7 +174,7 @@ void setupTcpConnection(void) {
 	memset(&saddr, 0, sizeof(struct sockaddr_in));
 	saddr.sin_family = AF_INET;
 	saddr.sin_addr.s_addr = INADDR_ANY;
-	saddr.sin_port = htons(5201);
+	saddr.sin_port = htons(9876);
 
 	bind(tcp_socket, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
 	listen(tcp_socket, 1);
