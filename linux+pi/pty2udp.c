@@ -89,7 +89,7 @@ void setupUdpConnection(void) {
 	struct sockaddr_in daddr;
 	memset(&daddr, 0, sizeof(struct sockaddr_in));
 	daddr.sin_family = AF_INET;
-	daddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	daddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	daddr.sin_port = htons(9877);
 
 	bind(udp_socket, (struct sockaddr *)&daddr, sizeof(struct sockaddr_in));
