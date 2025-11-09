@@ -166,7 +166,7 @@ void segfault() {
 	exitGracefully();
 }
 
-void setupTcpConnection(void) {
+void setupUdpConnection(void) {
 	udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
 
 	struct sockaddr_in saddr;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
 	signal(SIGSEGV, segfault);
 	signal(SIGINT, exit);
 	atexit(exitGracefully);
-	setupTcpConnection();
+	setupUdpConnection();
 	printf(
 		"Starting NuttX MicroBlocks...\n");
 	initTimers();
