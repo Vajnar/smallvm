@@ -170,19 +170,19 @@ void setupUdpConnection(void) {
 	udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
 
 	struct sockaddr_in saddr;
-	memset(&saddr, 0, sizeof(struct sockaddr_in));
+	memset(&saddr, 0, sizeof(saddr));
 	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	saddr.sin_port = htons(9877);
+	saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	saddr.sin_port = htons(9876);
 
 	struct sockaddr_in daddr;
-	memset(&daddr, 0, sizeof(struct sockaddr_in));
+	memset(&daddr, 0, sizeof(daddr));
 	daddr.sin_family = AF_INET;
-	daddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	daddr.sin_port = htons(9876);
+	daddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	daddr.sin_port = htons(9877);
 
-	bind(udp_socket, (struct sockaddr *)&daddr, sizeof(struct sockaddr_in));
-	connect(udp_socket, &saddr, sizeof(saddr));
+	bind(udp_socket, (struct sockaddr *)&saddr, sizeof(saddr));
+	connect(udp_socket, &daddr, sizeof(daddr));
 	int flags = fcntl(udp_socket, F_GETFL, 0);
 	fcntl(udp_socket, F_SETFL, flags | O_NONBLOCK);
 }
