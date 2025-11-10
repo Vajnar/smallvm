@@ -168,6 +168,8 @@ void segfault() {
 
 void setupUdpConnection(void) {
 	udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+	const int bool_true = 1;
+	setsockopt(udp_socket, SOL_SOCKET, SO_REUSEADDR, &bool_true, sizeof(bool_true));
 
 	struct sockaddr_in saddr;
 	memset(&saddr, 0, sizeof(saddr));
