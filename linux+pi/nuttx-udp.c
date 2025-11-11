@@ -194,8 +194,7 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, exit);
 	atexit(exitGracefully);
 	setupUdpConnection();
-	printf(
-		"Starting NuttX MicroBlocks...\n");
+	printf("Starting NuttX MicroBlocks...\n");
 	initTimers();
 	memInit();
 	primsInit();
