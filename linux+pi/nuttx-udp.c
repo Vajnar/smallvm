@@ -167,7 +167,7 @@ void segfault() {
 }
 
 void setupUdpConnection(void) {
-	udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+	udp_socket = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0);
 	const int bool_true = 1;
 	setsockopt(udp_socket, SOL_SOCKET, SO_REUSEADDR, &bool_true, sizeof(bool_true));
 
@@ -185,8 +185,6 @@ void setupUdpConnection(void) {
 
 	bind(udp_socket, (struct sockaddr *)&saddr, sizeof(saddr));
 	connect(udp_socket, &daddr, sizeof(daddr));
-	int flags = fcntl(udp_socket, F_GETFL, 0);
-	fcntl(udp_socket, F_SETFL, flags | O_NONBLOCK);
 }
 
 // Linux Main
