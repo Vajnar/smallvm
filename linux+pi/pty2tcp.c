@@ -84,7 +84,7 @@ void setupTcpConnection(void) {
 	struct sockaddr_in saddr;
 	memset(&saddr, 0, sizeof(struct sockaddr_in));
 	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	saddr.sin_addr.s_addr = inet_addr("192.168.1.106");
 	saddr.sin_port = htons(9876);
 
 	int ret = connect(tcp_socket, &saddr, sizeof(saddr));
@@ -92,8 +92,8 @@ void setupTcpConnection(void) {
 		perror(NULL);
 		exit(-1);
 	}
-	ret = setsockopt(tcp_socket, SOL_SOCKET, SO_KEEPALIVE, &bool_true, sizeof(bool_true));
-	ret = setsockopt(tcp_socket, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
+//	ret = setsockopt(tcp_socket, SOL_SOCKET, SO_KEEPALIVE, &bool_true, sizeof(bool_true));
+//	ret = setsockopt(tcp_socket, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
 	int flags = fcntl(tcp_socket, F_GETFL, 0);
 	ret = fcntl(tcp_socket, F_SETFL, flags | O_NONBLOCK);
 }

@@ -83,7 +83,7 @@ typedef enum {
 } MicroBlocksTaskStatus_t;
 
 #ifdef GNUBLOCKS
-	#define STACK_LIMIT 10000 // Task size is 6 + STACK_LIMIT words
+	#define STACK_LIMIT 5000 // Task size is 6 + STACK_LIMIT words
 #elif (defined(NRF51) || defined(ESP8266) || defined(DUELink))
 	#define STACK_LIMIT 54 // Task size is 6 + STACK_LIMIT words
 #else
@@ -104,7 +104,7 @@ typedef struct {
 
 // Task list shared by interp.c and runtime.c
 
-#define MAX_TASKS 10
+#define MAX_TASKS 5
 extern Task tasks[MAX_TASKS];
 extern int taskCount;
 

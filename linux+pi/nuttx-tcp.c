@@ -179,8 +179,8 @@ void setupTcpConnection(void) {
 	bind(tcp_socket, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
 	listen(tcp_socket, 1);
 	tcp_conn_socket = accept(tcp_socket, NULL, NULL);
-	setsockopt(tcp_conn_socket, SOL_SOCKET, SO_KEEPALIVE, &bool_true, sizeof(bool_true));
-	setsockopt(tcp_conn_socket, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
+//	setsockopt(tcp_conn_socket, SOL_SOCKET, SO_KEEPALIVE, &bool_true, sizeof(bool_true));
+//	setsockopt(tcp_conn_socket, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
 	int flags = fcntl(tcp_conn_socket, F_GETFL, 0);
 	fcntl(tcp_conn_socket, F_SETFL, flags | O_NONBLOCK);
 }

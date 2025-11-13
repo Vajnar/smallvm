@@ -59,7 +59,7 @@
 		#define OBJSTORE_BYTES 69000
 	#endif
 #elif defined(GNUBLOCKS)
-	#define OBJSTORE_BYTES 262100 // max number of bytes that we can allocate for now
+	#define OBJSTORE_BYTES 78000 // max number of bytes that we can allocate for now
 #elif defined(ARDUINO_ARCH_RP2040)
 	#define OBJSTORE_BYTES 57000
 #elif defined(ARDUINO_SAM_DUE)
