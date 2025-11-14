@@ -55,12 +55,11 @@ static void openPseudoTerminal() {
 }
 
 void transferData(int from_fd, int to_fd) {
-	char buf[1024];
-	int received, sent;
+	char buf[1500];
 
-	received = read(from_fd, buf, sizeof(buf));
+	int received = read(from_fd, buf, sizeof(buf));
 	if (received > 0) {
-		sent = 0;
+		int sent = 0;
 		while(sent < received) {
 			int written = write(to_fd, &buf[sent], received - sent);
 			if (written < 0) written = 0;
@@ -104,4 +103,6 @@ int main(void) {
 	setupTcpConnection();
 	openPseudoTerminal();
 	dataLoop();
+
+	return 0;
 }
