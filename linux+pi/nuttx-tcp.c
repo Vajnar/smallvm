@@ -77,7 +77,7 @@ int serialConnected() {
 }
 
 int recvBytes(uint8 *buf, int count) {
-	int readCount = read(tcp_conn_socket, buf, count);
+	int readCount = recv(tcp_conn_socket, buf, count, MSG_DONTWAIT);
 	if (readCount < 0) readCount = 0;
 	return readCount;
 }
@@ -181,8 +181,8 @@ void setupTcpConnection(void) {
 	tcp_conn_socket = accept(tcp_socket, NULL, NULL);
 //	setsockopt(tcp_conn_socket, SOL_SOCKET, SO_KEEPALIVE, &bool_true, sizeof(bool_true));
 //	setsockopt(tcp_conn_socket, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
-	int flags = fcntl(tcp_conn_socket, F_GETFL, 0);
-	fcntl(tcp_conn_socket, F_SETFL, flags | O_NONBLOCK);
+//	int flags = fcntl(tcp_conn_socket, F_GETFL, 0);
+//	fcntl(tcp_conn_socket, F_SETFL, flags | O_NONBLOCK);
 }
 
 // Linux Main
