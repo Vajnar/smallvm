@@ -84,7 +84,7 @@ void setupTcpConnection(void) {
 	struct sockaddr_in saddr;
 	memset(&saddr, 0, sizeof(struct sockaddr_in));
 	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = inet_addr("192.168.1.106");
+	saddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	saddr.sin_port = htons(9876);
 
 	int ret = connect(tcp_socket, &saddr, sizeof(saddr));

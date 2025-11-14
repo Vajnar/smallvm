@@ -13,8 +13,12 @@
 #include <string.h>
 #include <string.h>
 
-#if defined(GNUBLOCKS) && !defined(EMSCRIPTEN)
+#if defined(GNUBLOCKS) && !defined(EMSCRIPTEN) && !defined(NUTTX)
 #include "../linux+pi/linux.h"
+#endif
+
+#if defined(NUTTX)
+#include "../linux+pi/nuttx.h"
 #endif
 
 #include "mem.h"

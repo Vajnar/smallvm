@@ -20,7 +20,7 @@
 
 // Tasks - Set USE_TASKS to false to test interpreter performance without task switching
 
-#define USE_TASKS true
+#define USE_TASKS 1
 
 // RECENT is a threshold for waking up tasks waiting on timers
 // The timer can be up to this many usecs past the wakeup time.
