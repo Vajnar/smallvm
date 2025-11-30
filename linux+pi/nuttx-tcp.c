@@ -4,7 +4,7 @@
 
 // Copyright 2018 John Maloney, Bernat Romagosa, and Jens Mönig
 
-// linux.c - Microblocks for NuttX
+// nuttx.c - Microblocks for NuttX
 
 // John Maloney, December 2017
 // Bernat Romagosa, February 2018
@@ -12,6 +12,9 @@
 
 #define _XOPEN_SOURCE 600
 #define _DEFAULT_SOURCE
+#define DEBUG
+#define CONFIG_INTERPRETERS_SMALLVM_TCP 1
+#define CONFIG_INTERPRETERS_SMALLVM_TCP_PORT 9876
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -28,6 +31,8 @@
 #include <string.h>
 #include <sys/select.h>
 #include <errno.h>
+#include <ctype.h>
+//#include <nuttx/config.h>
 
 #include "mem.h"
 #include "interp.h"
@@ -72,30 +77,60 @@ void delay(int ms) {
 
 // Communication/System Functions
 
-static int tcp_conn_socket = -1; // pseudo terminal used for communication with the IDE
+#ifdef DEBUG
+static void print_hex_dump(const unsigned char *buffer, size_t length) {
+    for (size_t i = 0; i < length; i += 16) {
+        // Print the hex values
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < length) {
+                printf("%02X ", buffer[i + j]);
+            } else {
+                printf("   "); // Print spaces for missing bytes
+            }
+        }
+
+        // Print the ASCII representation
+        printf(" |");
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < length) {
+                printf("%c", isprint(buffer[i + j]) ? buffer[i + j] : '.');
+            }
+        }
+        printf("|\n");
+    }
+}
+#endif
+
+static int fd = -1; // pseudo terminal used for communication with the IDE
 static fd_set fdSet;
 static struct timeval tv;
 
 int serialConnected() {
-	return tcp_conn_socket > -1;
+	return fd > -1;
 }
 
 int recvBytes(uint8 *buf, int count) {
 	int readCount = 0;
 
 	FD_ZERO(&fdSet);
-	FD_SET(tcp_conn_socket, &fdSet);
+	FD_SET(fd, &fdSet);
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
-	int ret = select(tcp_conn_socket+1, &fdSet, NULL, NULL, &tv);
+	int ret = select(fd+1, &fdSet, NULL, NULL, &tv);
 	if (ret == -1) {
 		perror("select()");
 	} else if (ret) {
-		readCount = read(tcp_conn_socket, buf, count);
+		readCount = read(fd, buf, count);
 		if (readCount < 0) {
 			readCount = 0;
-			perror("Error recvBytes");
+			perror("Error recvBytes: ");
 		}
+#ifdef DEBUG
+		else if (readCount > 0) {
+			printf("recvBytes: buf = %p, readCount = %d, count = %d\n", buf, readCount, count);
+			print_hex_dump(buf, readCount);
+		}
+#endif
 	}
 	return readCount;
 }
@@ -104,18 +139,24 @@ int sendBytes(uint8 *buf, int start, int end) {
 	int writtenBytes = 0;
 
 	FD_ZERO(&fdSet);
-	FD_SET(tcp_conn_socket, &fdSet);
+	FD_SET(fd, &fdSet);
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
-	int ret = select(tcp_conn_socket+1, NULL, &fdSet, NULL, &tv);
+	int ret = select(fd+1, NULL, &fdSet, NULL, &tv);
 	if (ret == -1) {
 		perror("select()");
 	} else if (ret) {
-		writtenBytes = write(tcp_conn_socket, &buf[start], end - start);
+		writtenBytes = write(fd, &buf[start], end - start);
 		if (writtenBytes < 0) {
 			writtenBytes = 0;
-			perror("Error sendBytes");
+			perror("Error sendBytes no: ");
 		}
+#ifdef DEBUG
+		else if (writtenBytes > 0) {
+			printf("sendBytes: &buf[start] = %p, start = %d, end = %d, writtenBytes = %d, to write() = %d\n", &buf[start], start, end, writtenBytes, end - start);
+			print_hex_dump(&buf[start], writtenBytes);
+		}
+#endif
 	}
 	return writtenBytes;
 }
@@ -181,7 +222,7 @@ void clearCodeFile(int ignore) { }
 // Debug
 
 static void exitGracefully() {
-	close(tcp_conn_socket);
+	close(fd);
 }
 
 void segfault() {
@@ -189,7 +230,31 @@ void segfault() {
 	exitGracefully();
 }
 
-void setupTcpConnection(void) {
+#ifdef CONFIG_INTERPRETERS_SMALLVM_SERIAL
+void setupConnection(void) {
+	fd = open(CONFIG_INTERPRETERS_SMALLVM_SERIAL_DEVICE,
+		O_NOCTTY | O_NONBLOCK | O_RDWR | O_SYNC);
+	if (fd < 0) {
+		perror("setupConnection: open()");
+		exit(-1);
+	}
+
+	struct termios settings;
+	memset(&settings, 0, sizeof(settings));
+
+	tcgetattr(fd, &settings);
+	cfmakeraw(&settings);
+	cfsetispeed(&settings, B115200);
+	cfsetospeed(&settings, B115200);
+	settings.c_cc[VMIN] = 0;
+	settings.c_cc[VTIME] = 0;
+	tcsetattr(fd, TCSANOW, &settings);
+	tcflush(fd, TCIOFLUSH);
+}
+#endif
+
+#ifdef CONFIG_INTERPRETERS_SMALLVM_TCP
+void setupConnection(void) {
 	const int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
 	const int bool_true = 1;
 	setsockopt(tcp_socket, SOL_SOCKET, SO_REUSEADDR, &bool_true, sizeof(bool_true));
@@ -197,27 +262,27 @@ void setupTcpConnection(void) {
 	struct sockaddr_in saddr;
 	memset(&saddr, 0, sizeof(struct sockaddr_in));
 	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = INADDR_ANY;
-	saddr.sin_port = htons(9876);
+	saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	saddr.sin_port = htons(CONFIG_INTERPRETERS_SMALLVM_TCP_PORT);
 
 	bind(tcp_socket, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
 	listen(tcp_socket, 1);
-	tcp_conn_socket = accept(tcp_socket, NULL, NULL);
-//	setsockopt(tcp_conn_socket, SOL_SOCKET, SO_KEEPALIVE, &bool_true, sizeof(bool_true));
-//	setsockopt(tcp_conn_socket, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
-//	int flags = fcntl(tcp_conn_socket, F_GETFL, 0);
-//	fcntl(tcp_conn_socket, F_SETFL, flags | O_NONBLOCK);
+	fd = accept(tcp_socket, NULL, NULL);
+//	setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &bool_true, sizeof(bool_true));
+//	setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
+//	int flags = fcntl(fd, F_GETFL, 0);
+//	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
+#endif
 
-// Linux Main
+// NuttX Main
 
 int main(int argc, char *argv[]) {
 	signal(SIGSEGV, segfault);
 	signal(SIGINT, exit);
 	atexit(exitGracefully);
-	setupTcpConnection();
-	printf(
-		"Starting NuttX MicroBlocks...\n");
+	setupConnection();
+	printf("Starting NuttX MicroBlocks...\n");
 	initTimers();
 	memInit();
 	primsInit();

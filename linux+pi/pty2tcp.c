@@ -1,6 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Copyright 2018 John Maloney, Bernat Romagosa, and Jens Mönig
+
+// Code for transferring data between IDE MicroBlocks (using
+// pseudo-terminal) and smallVM (connected via TCP socket)
 
 #define _XOPEN_SOURCE 600
 #define _DEFAULT_SOURCE
+#define DEBUG
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -18,6 +27,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <ctype.h>
 
 static int pty;
 static int tcp_socket;
@@ -54,15 +64,49 @@ static void openPseudoTerminal() {
 	makePtyFile();
 }
 
+#ifdef DEBUG
+static void print_hex_dump(const unsigned char *buffer, size_t length) {
+    for (size_t i = 0; i < length; i += 16) {
+        // Print the hex values
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < length) {
+                printf("%02X ", buffer[i + j]);
+            } else {
+                printf("   "); // Print spaces for missing bytes
+            }
+        }
+
+        // Print the ASCII representation
+        printf(" |");
+        for (size_t j = 0; j < 16; j++) {
+            if (i + j < length) {
+                printf("%c", isprint(buffer[i + j]) ? buffer[i + j] : '.');
+            }
+        }
+        printf("|\n");
+    }
+}
+#endif
+
 void transferData(int from_fd, int to_fd) {
-	char buf[1500];
+	unsigned char buf[1500];
 
 	int received = read(from_fd, buf, sizeof(buf));
 	if (received > 0) {
 		int sent = 0;
+#ifdef DEBUG
+		printf("transferData: read() of %d from %d\n", received, from_fd);
+		print_hex_dump(buf, received);
+#endif
 		while(sent < received) {
 			int written = write(to_fd, &buf[sent], received - sent);
 			if (written < 0) written = 0;
+#ifdef DEBUG
+			else if (written > 0) {
+				printf("transferData: write() of %d to %d\n", written, to_fd);
+				print_hex_dump(&buf[sent], written);
+			}
+#endif
 			sent += written;
 		}
 	}
@@ -72,7 +116,7 @@ void dataLoop() {
 	while(1) {
 		transferData(pty, tcp_socket);
 		transferData(tcp_socket, pty);
-		usleep(10000);
+		usleep(1000);
 	}
 }
 
