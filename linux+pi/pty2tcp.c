@@ -92,7 +92,7 @@ void setupTcpConnection(void) {
 		exit(-1);
 	}
 //	ret = setsockopt(tcp_socket, SOL_SOCKET, SO_KEEPALIVE, &bool_true, sizeof(bool_true));
-//	ret = setsockopt(tcp_socket, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
+	ret = setsockopt(tcp_socket, IPPROTO_TCP, TCP_NODELAY, &bool_true, sizeof(bool_true));
 	int flags = fcntl(tcp_socket, F_GETFL, 0);
 	ret = fcntl(tcp_socket, F_SETFL, flags | O_NONBLOCK);
 }

@@ -26,6 +26,8 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <string.h>
+#include <sys/select.h>
+#include <errno.h>
 
 #include "mem.h"
 #include "interp.h"
@@ -71,29 +73,51 @@ void delay(int ms) {
 // Communication/System Functions
 
 static int tcp_conn_socket = -1; // pseudo terminal used for communication with the IDE
+static fd_set fdSet;
+static struct timeval tv;
 
 int serialConnected() {
 	return tcp_conn_socket > -1;
 }
 
 int recvBytes(uint8 *buf, int count) {
-	int readCount = recv(tcp_conn_socket, buf, count, MSG_DONTWAIT);
-	if (readCount < 0) readCount = 0;
+	int readCount = 0;
+
+	FD_ZERO(&fdSet);
+	FD_SET(tcp_conn_socket, &fdSet);
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	int ret = select(tcp_conn_socket+1, &fdSet, NULL, NULL, &tv);
+	if (ret == -1) {
+		perror("select()");
+	} else if (ret) {
+		readCount = read(tcp_conn_socket, buf, count);
+		if (readCount < 0) {
+			readCount = 0;
+			perror("Error recvBytes");
+		}
+	}
 	return readCount;
 }
 
-int canReadByte() {
-	int bytesAvailable;
-	ioctl(tcp_conn_socket, FIONREAD, &bytesAvailable);
-	return (bytesAvailable > 0);
-}
-
-int sendByte(char aByte) {
-	return write(tcp_conn_socket, &aByte, 1);
-}
-
 int sendBytes(uint8 *buf, int start, int end) {
-	return write(tcp_conn_socket, &buf[start], end - start);
+	int writtenBytes = 0;
+
+	FD_ZERO(&fdSet);
+	FD_SET(tcp_conn_socket, &fdSet);
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	int ret = select(tcp_conn_socket+1, NULL, &fdSet, NULL, &tv);
+	if (ret == -1) {
+		perror("select()");
+	} else if (ret) {
+		writtenBytes = write(tcp_conn_socket, &buf[start], end - start);
+		if (writtenBytes < 0) {
+			writtenBytes = 0;
+			perror("Error sendBytes");
+		}
+	}
+	return writtenBytes;
 }
 
 int ideConnected() {
