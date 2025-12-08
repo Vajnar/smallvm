@@ -1394,7 +1394,7 @@ void vmLoop() {
 				cocubeSensorUpdate();
 			#endif
 			handleMicosecondClockWrap();
-			count = 95; // must be under 30 when building on mbed to avoid serial errors
+			count = 0; // must be under 30 when building on mbed to avoid serial errors
 		} else if ((count & 0xF) == 0) {
 			captureIncomingBytes();
 		}
