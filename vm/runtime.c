@@ -1182,12 +1182,12 @@ static void sendPingNow(int chunkIndex) {
 	sendData();
 }
 
-static void processShortMessage() {
+static int processShortMessage() {
 	if (rcvByteCount < 3) { // message is not complete
 		if (receiveTimeout()) {
 			skipToStartByteAfter(1);
 		}
-		return; // message incomplete
+		return 0; // message incomplete
 	}
 	int cmd = rcvBuf[1];
 	int chunkIndex = rcvBuf[2];
@@ -1278,23 +1278,24 @@ static void processShortMessage() {
 		}
 	}
 	skipToStartByteAfter(3);
+	return 1;
 }
 
-static void processLongMessage() {
+static int processLongMessage() {
 	int msgLength = (rcvBuf[4] << 8) | rcvBuf[3];
 	if ((rcvByteCount >= 5) && (msgLength > MAX_MSG_SIZE)) { // message too large for buffer
 		skipToStartByteAfter(1);
-		return;
+		return 1;
 	}
 	if ((rcvByteCount < 5) || (rcvByteCount < (5 + msgLength))) { // message is not complete
 		if (receiveTimeout()) {
 			skipToStartByteAfter(1);
 		}
-		return; // message incomplete
+		return 0; // message incomplete
 	}
 	if (0xFE != rcvBuf[5 + msgLength - 1]) { // chunk does not end with a terminator byte
 		skipToStartByteAfter(1);
-		return;
+		return 1;
 	}
 	int cmd = rcvBuf[1];
 	int chunkIndex = rcvBuf[2];
@@ -1331,6 +1332,7 @@ static void processLongMessage() {
 		}
 	}
 	skipToStartByteAfter(5 + msgLength);
+	return 1;
 }
 
 // Uncomment when building on mbed:
@@ -1367,15 +1369,17 @@ void processMessage() {
 	// Drain receive buffer.
 	// It can happen on TCP that data is buffered due to re-xmit attempts. When successful the data
 	// is sent all at once overloading receive buffer with messages.
-	while(rcvByteCount) {
-		lastRcvTime = microsecs();
+	lastRcvTime = microsecs();
+	int processMessage = 1;
+	while(processMessage) {
 		int firstByte = rcvBuf[0];
 		if (0xFA == firstByte) {
-			processShortMessage();
+			processMessage = processShortMessage();
 		} else if (0xFB == firstByte) {
-			processLongMessage();
+			processMessage = processLongMessage();
 		} else {
 			skipToStartByteAfter(1); // bad message, probably due to dropped bytes
 		}
+		if (!rcvByteCount) processMessage = 0;
 	}
 }
