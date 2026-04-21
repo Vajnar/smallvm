@@ -1394,7 +1394,7 @@ void vmLoop() {
 				cocubeSensorUpdate();
 			#endif
 			handleMicosecondClockWrap();
-			count = 0; // must be under 30 when building on mbed to avoid serial errors
+			count = 95; // must be under 30 when building on mbed to avoid serial errors
 		} else if ((count & 0xF) == 0) {
 			captureIncomingBytes();
 		}
@@ -1429,7 +1429,7 @@ void vmLoop() {
 #ifdef GNUBLOCKS
 		if (!runCount) { // no active tasks; consider taking a nap
 			if (!usecs) usecs = microsecs(); // get usecs
-			int sleepUSecs = 500;
+			int sleepUSecs = 2000000;
 			for (int i = 0; i < taskCount; i++) {
 				Task *task = &tasks[i];
 				if (waiting_micros == task->status) {
@@ -1439,7 +1439,11 @@ void vmLoop() {
 					}
 				}
 			}
-			if (sleepUSecs > 5) usleep(sleepUSecs); // nap a while to relinquish the CPU
+			if (sleepUSecs > 5) {
+				if(waitUSecsOrEvent(sleepUSecs) > 0) { // nap a while to relinquish the CPU
+					count = -1;
+				}
+			}
 		}
 #endif
 	}

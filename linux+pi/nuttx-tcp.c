@@ -12,7 +12,7 @@
 
 #define _XOPEN_SOURCE 600
 #define _DEFAULT_SOURCE
-#define DEBUG
+#define _GNU_SOURCE
 #define CONFIG_INTERPRETERS_SMALLVM_TCP 1
 #define CONFIG_INTERPRETERS_SMALLVM_TCP_PORT 9876
 
@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <ctype.h>
 //#include <nuttx/config.h>
+#include <poll.h>
 
 #include "mem.h"
 #include "interp.h"
@@ -102,29 +103,51 @@ static void print_hex_dump(const unsigned char *buffer, size_t length) {
 #endif
 
 static int fd = -1; // pseudo terminal used for communication with the IDE
-static fd_set fdSet;
-static struct timeval tv;
 
 int serialConnected() {
 	return fd > -1;
 }
 
+int waitUSecsOrEvent(int usecs) {
+	int ret;
+	int nfds = 1;
+	struct pollfd fds[1];
+	struct timespec timeout = { .tv_sec = usecs / 1000000, .tv_nsec = (usecs % 1000000) * 1000};
+
+	fds[0].fd = fd;
+	fds[0].events = POLLIN;
+	if (bytesToOutput()) { fds[0].events |= POLLOUT; }
+	printf("Timeout.tv_sec = %ld, .tv_nsec = %ld\n", timeout.tv_sec, timeout.tv_nsec);
+	ret = ppoll(fds, nfds, &timeout, NULL);
+	printf("ppoll() = %d\n", ret);
+
+	return ret;
+}
+
 int recvBytes(uint8 *buf, int count) {
 	int readCount = 0;
 
-	FD_ZERO(&fdSet);
-	FD_SET(fd, &fdSet);
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	int ret = select(fd+1, &fdSet, NULL, NULL, &tv);
+	int nfds = 1;
+	struct pollfd fds[1];
+	struct timespec timeout = {0,0};
+
+	if (fd < 0) return 0;
+	fds[0].fd = fd;
+	fds[0].events = POLLIN;
+	int ret = ppoll(fds, nfds, &timeout, NULL);
 	if (ret == -1) {
-		perror("select()");
+		perror("ppoll()");
 	} else if (ret) {
 		readCount = read(fd, buf, count);
 		if (readCount < 0) {
 			readCount = 0;
 			perror("Error recvBytes: ");
 		}
+#ifdef CONFIG_INTERPRETERS_SMALLVM_TCP
+		else if (readCount == 0) {
+			fd = -1;
+		}
+#endif
 #ifdef DEBUG
 		else if (readCount > 0) {
 			printf("recvBytes: buf = %p, readCount = %d, count = %d\n", buf, readCount, count);
@@ -138,19 +161,27 @@ int recvBytes(uint8 *buf, int count) {
 int sendBytes(uint8 *buf, int start, int end) {
 	int writtenBytes = 0;
 
-	FD_ZERO(&fdSet);
-	FD_SET(fd, &fdSet);
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	int ret = select(fd+1, NULL, &fdSet, NULL, &tv);
+	int nfds = 1;
+	struct pollfd fds[1];
+	struct timespec timeout = {0,0};
+
+	if (fd < 0) return 0;
+	fds[0].fd = fd;
+	fds[0].events = POLLOUT;
+	int ret = ppoll(fds, nfds, &timeout, NULL);
 	if (ret == -1) {
-		perror("select()");
+		perror("ppoll()");
 	} else if (ret) {
 		writtenBytes = write(fd, &buf[start], end - start);
 		if (writtenBytes < 0) {
 			writtenBytes = 0;
 			perror("Error sendBytes no: ");
 		}
+#ifdef CONFIG_INTERPRETERS_SMALLVM_TCP
+		else if (writtenBytes == 0) {
+			fd = -1;
+		}
+#endif
 #ifdef DEBUG
 		else if (writtenBytes > 0) {
 			printf("sendBytes: &buf[start] = %p, start = %d, end = %d, writtenBytes = %d, to write() = %d\n", &buf[start], start, end, writtenBytes, end - start);
