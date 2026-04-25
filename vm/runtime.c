@@ -1186,6 +1186,7 @@ static int processShortMessage() {
 	if (rcvByteCount < 3) { // message is not complete
 		if (receiveTimeout()) {
 			skipToStartByteAfter(1);
+			return 1;
 		}
 		return 0; // message incomplete
 	}
@@ -1290,6 +1291,7 @@ static int processLongMessage() {
 	if ((rcvByteCount < 5) || (rcvByteCount < (5 + msgLength))) { // message is not complete
 		if (receiveTimeout()) {
 			skipToStartByteAfter(1);
+			return 1;
 		}
 		return 0; // message incomplete
 	}
