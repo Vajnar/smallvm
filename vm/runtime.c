@@ -1383,5 +1383,6 @@ void processMessage() {
 			skipToStartByteAfter(1); // bad message, probably due to dropped bytes
 		}
 		if (!rcvByteCount) processMessage = 0;
+		sendData();
 	}
 }
